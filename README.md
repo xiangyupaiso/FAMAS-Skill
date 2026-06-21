@@ -376,6 +376,43 @@ FAMAS-Skill/
 │       ├── famas-analyze-fund/
 │       │   └── SKILL.md          # Claude Code: /famas-analyze-fund
 │       ├── famas-screen-fund/
+│       │   └── SKILL.md          # Claude Code: /famas-screen-fund
+│       ├── famas-diagnose-portfolio/
+│       │   └── SKILL.md          # Claude Code: /famas-diagnose-portfolio
+│       └── famas-monitor-fund/
+│           └── SKILL.md          # Claude Code: /famas-monitor-fund
+├── .agents/
+│   └── skills/
+│       ├── famas-analyze-fund/
+│       │   └── SKILL.md          # Codex: 单基金深度分析
+│       ├── famas-screen-fund/
+│       │   └── SKILL.md          # Codex: 行业/偏好筛选
+│       ├── famas-diagnose-portfolio/
+│       │   └── SKILL.md          # Codex: 组合持仓诊断
+│       └── famas-monitor-fund/
+│           └── SKILL.md          # Codex: 持续监控预警
+├── agents/                       # 各Agent的System Prompt
+│   ├── prospectus_analyzer.md
+│   ├── performance_analyst.md
+│   ├── cost_analyzer.md
+│   ├── manager_profiler.md
+│   ├── macro_strategist.md
+│   ├── wealth_advisor.md
+│   ├── sector_screener.md
+│   ├── fund_comparator.md
+│   ├── portfolio_doctor.md
+│   └── watchtower.md
+├── workflows/                    # 工作流定义
+│   ├── workflow_a_single_fund.md
+│   ├── workflow_b_sector_screen.md
+│   ├── workflow_c_portfolio.md
+│   └── workflow_d_monitoring.md
+├── templates/                    # 输出模板
+│   ├── comprehensive_rating_card.md
+│   ├── sector_screening_report.md
+│   ├── portfolio_diagnosis_report.md
+│   └── monitoring_alert_report.md
+└── README.md
 ```
 
 ---
