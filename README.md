@@ -2,7 +2,8 @@
 
 > **Fund Analysis Multi-Agent System**
 >
-> 基于多Agent协作的基金深度分析、筛选与持续监控决策支持系统
+>
+> **首个**基于多Agent协作的基金深度分析、筛选与持续监控决策支持系统
 
 ---
 
