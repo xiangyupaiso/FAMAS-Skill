@@ -63,7 +63,7 @@ flowchart LR
     style M fill:#2f6da8,color:#fff
 ```
 
-**Layering rule**: the fact layer emits facts only (nine persona-free capabilities plus periodic-report reading), the judgement layer emits counter-evidence only, and the synthesis layer is the **only** place allowed to hold a view. Monitoring is no longer an agent — it is a threshold rule set in `triggers/rules.yaml` plus the host scheduler.
+**Layering rule**: the fact layer emits facts only (nine persona-free capabilities, including periodic-report reading), the judgement layer emits counter-evidence only, and the synthesis layer is the **only** place allowed to hold a view. Monitoring is no longer an agent — it is a threshold rule set in `triggers/rules.yaml` plus the host scheduler.
 
 ---
 
@@ -175,7 +175,7 @@ python tools/validate.py --strict   # warnings are failures
 python tools/check_report.py        # output gate for every report under runs/
 ```
 
-Both checkers pass in normal and strict mode with **0 errors, 0 warnings** (85 files / 24 workflows / 11 capabilities / 38 semantic fields / 13 contract blocks / 7 templates / 11 providers / 27 forbidden terms). Negative tests inject defects and reliably fail with exit code 1.
+Both checkers pass in normal and strict mode with **0 errors, 0 warnings** (86 files / 24 workflows / 11 capabilities / 38 semantic fields / 13 contract blocks / 7 templates / 11 providers / 27 forbidden terms). Negative tests inject defects and reliably fail with exit code 1.
 
 **Still bounded by external conditions**: full text of the target fund's §4.4 section, a second authorised data source (true cross-source verification), full research reports and assumption tables, and on-disk decision logs (opt-in). None of these are filled with estimates — they degrade explicitly into `missing_fields`.
 
