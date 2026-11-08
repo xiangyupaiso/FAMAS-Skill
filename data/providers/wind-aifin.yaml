@@ -1,0 +1,43 @@
+# 数据源声明：万得 AIFin Market
+id: wind-aifin
+name: "万得 AIFin Market（Wind 系 AI 金融数据服务）"
+trust: L2
+priority: 20
+status: "公开资料显示 2026 年已开放面向 AI 客户端的数据服务入口"
+
+auth:
+  recommended: "厂商平台注册取得 API Key 后由宿主配置（公开资料中称为 WIND_API_KEY）"
+  alternative: "远程 MCP 授权（若厂商账号支持）"
+  token_location: "环境变量 / 本地未跟踪配置，本仓库不存放"
+
+capability_hints:
+  - fund_basic_data
+  - nav_series
+  - index_series
+  - fund_reports
+  - macro_data
+  - bond_market
+  - fx_market
+  - research_data
+  - announcement_feed
+  - fund_analytics
+
+coverage:
+  - fund_basic
+  - fee_schedule
+  - fund_nav_history
+  - index_quotes
+  - holdings
+  - scale_history
+  - macro_rates
+  - macro_fx
+  - policy_text
+  - research_reports
+  - assumption_tables
+  - manager_history
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见厂商官方接入文档，本文件不内置端点"
+limits: "注册方式、每日额度与可调用模块以厂商官方文档为准"
+facts_source: "2026 年公开资料整理（厂商官网、行业研报与财经媒体报道），非实时核验"
+disclaimer: "工具发现入口、接口能力与授权细节以万得官方文档为准；本仓库不内置任何端点或凭据"

@@ -1,0 +1,94 @@
+# 数据源声明：Wind Alice 万得金融数据（宿主连接器 wind-finance）
+# 本文件只声明能力类别与字段覆盖；工具名/端点一律由 tools/list 运行时探测。
+id: wind-alice
+name: "Wind Alice 万得金融数据（宿主连接器 wind-finance）"
+trust: L2
+disclosure_trust: L1
+priority: 10
+verified_on: "2026-11-07"
+status: "已在宿主客户端完成授权并跑通端到端首跑；覆盖结论见 runs/2026-11-07/field_probe.md"
+
+# 同一连接器提供两类来源，可信度必须分别取：
+#   公告 / 基金定期报告 / 招募说明书原文片段 -> L1（一手披露文件）
+#   结构化接口（档案、业绩、持仓、财务、持有人、指数快照）-> L2（持牌数据商）
+# 选源规则见 data/gateway.md 第三节「混合可信度 provider」。
+trust_by_source_type:
+  disclosure_original: L1
+  structured_api: L2
+
+auth:
+  recommended: "宿主客户端连接器授权：用户登录数据源方账号（唯一人工步骤）"
+  token_location: "宿主客户端保管并自动刷新，本仓库不存放"
+  note: "FAMAS 无账号、无登录入口；登录对象是数据源的 MCP，不是 FAMAS"
+
+capability_hints:
+  - fund_basic_data
+  - fund_disclosure
+  - fund_reports
+  - document_retrieval
+  - portfolio_holdings
+  - financial_data
+  - nav_series
+  - index_series
+  - market_quotes
+  - fund_analytics
+  - manager_data
+  - announcement_feed
+
+coverage:
+  - fund_basic
+  - fund_classification
+  - benchmark
+  - fee_schedule
+  - fund_announcements
+  - fund_nav_history
+  - fund_nav
+  - index_quotes
+  - holdings
+  - scale_history
+  - fund_universe
+  - manager_roster
+  - dividend_history
+  - periodic_report_full
+  - portfolio_report
+  - financial_statements
+  - report_holder_changes
+  - report_fee_detail
+  - prospectus_terms
+  - corporate_actions
+
+# 2026-11-07 补测结论：净值序列（场外基金走业绩接口的净值族，不是 K 线接口）、
+# 全市场筛选、基金公司档案、宏观 EDB「仅搜索/仅提数」通道均已实测可用。
+supplementary_probe:
+  fund_nav_history: "2026-10-01→2026-11-06 共 22 个交易日单位/累计/复权净值，单位净值=累计净值=复权净值（无分红迹象）"
+  fund_universe: "search_funds 组合条件筛选返回 5 只，含目标基金规模 189.3266 亿元，与持有人接口一致"
+  fund_company: "管理人规模 2.8403 万亿元、非货币 1.9981 万亿元、旗下 557 只；『基金经理数量 75752 个』量级异常 -> implausible_value"
+  macro_edb: "仅搜索可定位指标（如 CPI 当月同比 M0000612）；仅提数 CPI 可用；10 年国债收益率 S0059749 返回 code 1008 指标级无权限"
+  news: "财经新闻检索返回券商研报摘录（机构名/发布时间/分析师编号），按 L3 二手处理，仅作 opinion_ref"
+
+partial_coverage_notes:
+  periodic_report_full: "章节片段可检索，但目标文档章节未必命中，且**跨文档误召回严重**；须先做 document_title_match 校验"
+  manager_roster: "返回多位经理姓名但只有一个任职日期，无法对应到人"
+  fee_schedule: "管理费/托管费可得，销售服务费与申赎费档位未取到"
+  fund_classification: "仅一级分类，风格属性为空"
+  portfolio_report: "章节标题可见，报告内原始行业分类不可得"
+  dividend_history: "分红总额返回 null，无法区分无分红与无数据"
+  macro_rates: "EDB 通道可用但本账号缺利率类指标权限，属账号授权范围问题，非工具不支持"
+  research_reports: "新闻检索可得研报观点片段，非研报全文；second_hand，需核实原文"
+  policy_text: "新闻为媒体转述，非政策原文；需另取监管一手发布"
+
+known_gaps:
+  - manager_commentary
+  - narrative_history
+  - material_events
+  - holder_structure
+  - turnover_history
+  - trading_costs
+  - assumption_tables
+known_gaps_note: "manager_commentary / manager_outlook / narrative_history 在目标文档（005827.OF 2026Q3 / 2026H1）中未命中；其他基金同名章节可被检索到但一律 rejected_cross_document。见 capabilities/periodic_report_reader.md"
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见宿主连接器配置，本文件不内置端点"
+limits: "调用额度、开通模块以数据源方官方文档与账号权限为准"
+facts_source: "2026-11-07 宿主已授权会话实测（runs/2026-11-07/field_probe.md）"
+disclaimer: "本文件是一次性实测的能力类别声明，不是静态工具名映射；实际路由由 data/gateway.md 运行时生成"

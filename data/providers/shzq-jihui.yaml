@@ -1,0 +1,46 @@
+# 数据源声明：上海证券「洞鉴·基汇」基金评价 MCP
+id: shzq-jihui
+name: "上海证券 洞鉴·基汇 基金评价 MCP"
+trust: L2
+priority: 15
+status: "公开资料显示 2026 年已开放基金评价类 MCP 能力"
+note: "覆盖基金 / 经理 / 基金公司 / 组合等维度，是与 FAMAS 业务最对口的数据源；建议基金分析场景优先配置"
+
+auth:
+  recommended: "按厂商文档在宿主客户端完成授权"
+  token_location: "宿主客户端保管，本仓库不存放"
+
+capability_hints:
+  - fund_rating
+  - fund_basic_data
+  - fund_analytics
+  - manager_data
+  - fund_company_data
+  - portfolio_analytics
+  - fund_reports
+
+coverage:
+  - fund_basic
+  - fund_classification
+  - benchmark
+  - fund_nav_history
+  - peer_nav
+  - holdings
+  - manager_roster
+  - manager_history
+  - manager_performance
+  - fee_schedule
+  - scale_history
+  - turnover_history
+  - fund_announcements
+  - periodic_report_full
+  - manager_commentary
+  - portfolio_report
+  - report_fee_detail
+  - report_holder_changes
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见厂商官方接入文档，本文件不内置端点"
+limits: "评价模块与数据范围以厂商账号授权为准；评价结果属第三方观点，须标 opinion_ref"
+facts_source: "2026 年公开资料整理（行业研报与财经媒体报道），非实时核验"
+disclaimer: "接入方式、评价口径与授权条件以上海证券官方文档为准；评价结论不得直接作为 FAMAS 结论"

@@ -1,0 +1,33 @@
+# 数据源声明：AKShare 系本地开源封装
+id: akshare
+name: "AKShare（本地开源数据封装）"
+trust: L3
+priority: 90
+status: "开源 Python 数据库，需自行封装为 MCP 或由网关本地调用"
+note: "无 SLA、无商业数据再分发授权；仅用于补充性、可交叉验证的字段。开源许可覆盖代码，不自动覆盖所抓取数据的再分发权"
+
+auth:
+  recommended: "本地 stdio，无需账号"
+  token_location: "无"
+
+capability_hints:
+  - fund_basic_data
+  - nav_series
+  - fund_quotes
+  - index_series
+  - market_quotes
+  - fund_universe
+
+coverage:
+  - fund_basic
+  - fund_nav_history
+  - fund_nav
+  - index_quotes
+  - fund_universe
+  - fund_announcements
+
+tool_names: "runtime-discovered via tools/list（若封装为 MCP）；否则由网关本地适配"
+endpoint: "本地进程，无远程端点"
+limits: "上游页面/接口变动会导致字段失效；访问频率与商业使用边界需自行评估"
+facts_source: "公开资料整理，2026-11-07，非实时核验"
+disclaimer: "L3 数据必须带 second_hand 标记；不得与 L1 一手公告并列而不标等级，不得打包再分发"

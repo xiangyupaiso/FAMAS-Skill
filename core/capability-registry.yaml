@@ -1,0 +1,147 @@
+# FAMAS 能力注册表 — 唯一能力清单
+# 任何 workflow 中的 use 必须在此登记；未登记能力一律拒绝执行
+version: "2.0.0"
+
+# layer: fact 只出事实 / judgment 只出反证 / synthesis 才允许出观点
+layers: [fact, judgment, synthesis]
+
+# inputs 只列必填参数；能力文档中标注为"可选"的入参（如 benchmark_override、
+# compare_codes、dimensions、top_n、fund_strategy、上下文参数）无需逐一登记在此，
+# 由 core/orchestrator.md 的「参数继承 / 上下文透传」规则处理。
+parameter_policy: "core/orchestrator.md#四"
+
+trust_levels:
+  L1: "一手来源：监管公告、基金定期报告、交易所披露"
+  L2: "持牌数据商 MCP：与专业终端同源"
+  L3: "开源/抓取数据：无 SLA，仅作补充"
+  L4: "模型记忆：禁止作为数值来源"
+
+capabilities:
+  - id: fund_profile
+    layer: fact
+    file: capabilities/fund_profile.md
+    summary: "基金档案：投资范围、业绩基准、条款、持有人结构、份额类别"
+    inputs: [fund_code]
+    outputs: [fund_profile]
+    requires: [fund_basic, benchmark, fee_schedule, holder_structure, fund_announcements, fund_classification]
+    trust_min: L1
+    cache_ttl: "7d"
+    parallel_safe: true
+
+  - id: performance_metrics
+    layer: fact
+    file: capabilities/performance_metrics.md
+    summary: "业绩与风险：收益、回撤、夏普/卡玛、行业归因、风格漂移"
+    inputs: [fund_code, lookback]
+    outputs: [performance_metrics]
+    requires: [fund_nav_history, index_quotes, holdings, benchmark, turnover_history]
+    trust_min: L2
+    cache_ttl: "1d"
+    parallel_safe: true
+
+  - id: cost_model
+    layer: fact
+    file: capabilities/cost_model.md
+    summary: "成本模型：显性费率、隐性成本、TCR、规模惩罚、份额类别临界点"
+    inputs: [fund_code, horizon]
+    outputs: [cost_model]
+    requires: [fee_schedule, turnover_history, scale_history, trading_costs, fund_classification]
+    trust_min: L1
+    cache_ttl: "7d"
+    parallel_safe: true
+
+  - id: people
+    layer: fact
+    file: capabilities/people.md
+    summary: "人员：任职经历、能力圈、稳定性、共管与逆风表现"
+    inputs: [fund_code]
+    outputs: [people]
+    requires: [manager_roster, manager_history, manager_performance, fund_announcements]
+    trust_min: L1
+    cache_ttl: "7d"
+    parallel_safe: true
+
+  - id: macro_context
+    layer: fact
+    file: capabilities/macro_context.md
+    summary: "宏观环境：利率、汇率、风格强度、政策文本，不预测方向"
+    inputs: [as_of]
+    outputs: [macro_context]
+    requires: [macro_rates, macro_fx, style_index, policy_text, research_reports]
+    trust_min: L2
+    cache_ttl: "1d"
+    parallel_safe: true
+
+  - id: universe_scan
+    layer: fact
+    file: capabilities/universe_scan.md
+    summary: "全市场筛选：偏好解析、候选池、风格纯度、ETF 联接映射"
+    inputs: [preference, scope]
+    outputs: [universe_scan]
+    requires: [fund_universe, fund_classification, holdings, etf_linkage, fee_schedule]
+    trust_min: L2
+    cache_ttl: "1d"
+    parallel_safe: true
+
+  - id: relative_compare
+    layer: fact
+    file: capabilities/relative_compare.md
+    summary: "横向对比：收益风险、重合度、费率差、经理稳定性"
+    inputs: [fund_codes]
+    outputs: [relative_compare]
+    requires: [fund_nav_history, holdings, fee_schedule, manager_roster]
+    trust_min: L2
+    cache_ttl: "1d"
+    parallel_safe: true
+
+  - id: portfolio_view
+    layer: fact
+    file: capabilities/portfolio_view.md
+    summary: "组合视角：资产配比、集中度、隐性相关性、穿透后真实敞口"
+    inputs: [holdings]
+    outputs: [portfolio_view]
+    requires: [holdings, fund_classification, fund_nav_history, index_quotes]
+    trust_min: L2
+    cache_ttl: "1d"
+    parallel_safe: true
+
+  - id: periodic_report_reader
+    layer: fact
+    file: capabilities/periodic_report_reader.md
+    summary: "定期报告阅读：季报/中期报告/年报章节摘录、财务报表、审计意见、条款一致性、叙事对照"
+    inputs: [fund_code, report_type, report_period]
+    outputs: [periodic_report]
+    requires: [periodic_report_full, manager_commentary, portfolio_report, financial_statements, auditor_opinion, report_holder_changes, material_events, report_fee_detail, prospectus_terms, narrative_history, fund_announcements]
+    trust_min: L1
+    cache_ttl: "按披露"
+    parallel_safe: true
+    note: "运行时读取报告，读而不存；只做原文摘录与三类对照，不评价管理人"
+
+  - id: devils_advocate
+    layer: judgment
+    file: capabilities/devils_advocate.md
+    summary: "反证引擎：五类模式找最薄弱假设、替代解释、失效条件与置信度上限"
+    inputs: [upstream_blocks]
+    outputs: [counter_evidence]
+    requires: []
+    trust_min: L1
+    cache_ttl: "none"
+    parallel_safe: false
+    note: "synthesis 的强制前置；其 counter_evidence 段必须引用本能力输出"
+
+  - id: synthesis
+    layer: synthesis
+    file: capabilities/synthesis.md
+    summary: "综合层：唯一允许输出观点的能力，输出适配度而非推荐度"
+    inputs: [upstream_blocks, lens]
+    outputs: [synthesis]
+    requires: []
+    trust_min: L1
+    cache_ttl: "none"
+    parallel_safe: false
+    note: "必须作为最后一个业务步骤；输出前强制经过 policies/compliance.md 全项检查"
+
+# 原 v1 的 watchtower 不再作为能力存在
+scheduler:
+  file: triggers/rules.yaml
+  note: "阈值规则集 + 宿主调度器，不是 Agent，不进入 DAG 的 use"

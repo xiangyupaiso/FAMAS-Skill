@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FAMAS v2.0 单一输出契约",
+  "version": "2.0.0",
+  "note": "本文件是 FAMAS 全部字段的唯一定义处。能力单元、工作流、模板、README 均不得另行定义字段；模板只负责渲染本契约中的字段。",
+
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "required": ["source", "as_of", "confidence"],
+      "properties": {
+        "source": {"type": "string", "description": "数据来源：机构名 + 报告/接口名"},
+        "as_of": {"type": "string", "description": "数据时点 YYYY-MM-DD 或 YYYYQn"},
+        "confidence": {"type": "string", "enum": ["L1", "L2", "L3"], "description": "见 policies/source-trust.md，L4 禁止作为数值来源"},
+        "release_date": {"type": "string", "description": "发布日期，可与 as_of 不同"},
+        "second_hand": {"type": "boolean", "description": "是否非一手转述"},
+        "estimated": {"type": "boolean", "description": "是否为估算值"},
+        "method": {"type": "string", "description": "计算方法与参数假设"}
+      }
+    },
+    "metric": {
+      "type": "object",
+      "required": ["value", "provenance"],
+      "properties": {
+        "value": {"type": ["number", "string", "null"]},
+        "unit": {"type": "string"},
+        "window": {"type": "string"},
+        "provenance": {"$ref": "#/$defs/provenance"}
+      }
+    }
+  },
+
+  "envelope": {
+    "type": "object",
+    "required": ["workflow_id", "generated_at", "blocks", "missing_fields", "compliance_checked"],
+    "properties": {
+      "workflow_id": {"type": "string"},
+      "generated_at": {"type": "string", "description": "北京时间 ISO 8601"},
+      "lens": {"type": "string", "enum": ["retail", "fund_manager", "fof", "risk", "advisor"]},
+      "inputs": {"type": "object"},
+      "blocks": {"type": "object", "description": "本次 DAG 产出的能力输出块，键为能力 id"},
+      "missing_fields": {"type": "array", "items": {"type": "string"}, "description": "未取到的语义字段，必须在报告中显式列出"},
+      "source_conflicts": {"type": "array", "description": "多源分歧，见 policies/source-trust.md"},
+      "alert_summary": {"type": "object", "description": "监控巡检的预警计数：high / medium / low"},
+      "compliance_checked": {"type": "boolean", "description": "输出前检查清单是否全部通过"},
+      "disclaimer": {"type": "string", "description": "固定文案，见 policies/compliance.md"}
+    }
+  },
+
+  "blocks": {
+    "fund_profile": {
+      "fields": ["fund_code", "fund_name", "fund_basic", "fund_type", "share_classes", "investment_scope", "stock_position_range", "investable_assets", "special_permissions", "benchmark", "benchmark_weights", "fee_schedule", "holder_structure", "institutional_ratio_trend", "special_clauses", "etf_linkage"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "performance_metrics": {
+      "fields": ["window", "annual_return_1y", "annual_return_3y", "annual_return_5y", "benchmark_used", "alpha", "alpha_alt_benchmark", "max_drawdown", "drawdown_recovery_days", "sharpe_ratio", "calmar_ratio", "volatility", "downside_risk", "rolling_stability", "monthly_win_rate", "style_tilt", "style_drift_distance", "style_method", "top_sectors", "sector_hhi", "sector_deviation", "top10_ratio", "turnover_trend", "report_period"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "cost_model": {
+      "fields": ["management_fee", "custody_fee", "service_fee", "subscription_fee", "redemption_fee_by_horizon", "hidden_cost", "tcr_1y", "tcr_3y", "tcr_5y", "erosion_ratio", "peer_tcr_median", "fee_percentile", "current_scale", "scale_trend", "capacity_flag", "liquidation_line_flag", "qdii_surcharge", "assumptions", "breakeven_horizon", "tcr_by_horizon_table"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "people": {
+      "fields": ["managers", "tenure_start", "tenure_years", "co_management_ratio", "roster_changes", "core_sectors", "sector_count", "sector_stability", "style_characteristics", "stability_score", "stability_score_rule", "adverse_window", "adverse_relative_rank", "adverse_drawdown"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "macro_context": {
+      "fields": ["bond_10y", "bond_10y_percentile", "percentile_window", "yield_curve", "fx_trend", "fx_volatility", "style_strength", "policy_items", "strategy_exposure_table"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "universe_scan": {
+      "fields": ["parsed_preference", "scope", "fund_universe", "screening_logic", "sample_funnel", "exclusion_criteria", "candidate_pool", "match_score_weights", "style_purity", "pseudo_theme_flags", "etf_linkage_map"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "relative_compare": {
+      "fields": ["fund_codes", "dimensions", "return_risk_matrix", "overlap_matrix", "sector_similarity", "tcr_diff", "manager_stability_matrix", "ranking_basis", "report_period"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "portfolio_view": {
+      "fields": ["weight_sum", "weight_basis", "asset_allocation", "top_sectors_weighted", "max_fund_weight", "top10_lookthrough_weight", "hhi", "style_exposure", "correlation_matrix", "tail_correlation", "hidden_concentration", "window", "sample_size"],
+      "provenance_required": true,
+      "layer": "fact"
+    },
+    "synthesis": {
+      "fields": ["hypothesis", "evidence_refs", "counter_evidence", "invalidation_conditions", "veto_checks", "adaptability", "risk_level", "suitable_for", "unsuitable_for", "horizon_fit", "timing_matrix", "star_rating", "rating_rationale", "rating_dimensions", "key_risks", "decision_log_ref", "opinion_refs", "context_refs"],
+      "provenance_required": false,
+      "layer": "synthesis",
+      "note": "evidence_refs / counter_evidence 必须指向具体事实块字段；veto_checks 不得为空"
+    },
+    "periodic_report": {
+      "fields": ["report_type", "report_period", "disclosure_date", "source_doc", "manager_strategy_text", "manager_performance_commentary", "manager_outlook", "portfolio_asset_mix", "top_holdings_in_report", "sector_allocation_in_report", "bond_and_derivative_exposure", "financial_statement_items", "auditor_opinion", "share_and_holder_changes", "fee_detail_in_report", "material_events", "clause_consistency_findings", "cross_period_narrative_diff", "quoted_excerpts", "not_disclosed_sections", "not_retrievable_sections", "caveats"],
+      "provenance_required": true,
+      "layer": "fact",
+      "note": "quoted_excerpts 每项含 section / text / page_or_para；报告全文读而不存"
+    },
+    "counter_evidence": {
+      "fields": ["weakest_assumptions", "counter_signals", "alternative_explanations", "benchmark_sensitivity", "invalidation_conditions", "confidence_cap", "missing_evidence", "checked_modes"],
+      "provenance_required": true,
+      "layer": "judgment",
+      "note": "五类反证模式逐类检查；synthesis 的 counter_evidence 段必须引用本块"
+    },
+    "decision_log": {
+      "fields": ["log_id", "workflow_id", "fund_code", "as_of", "hypothesis", "evidence_refs", "counter_evidence_ref", "conclusion", "invalidation_conditions", "lens", "review_due", "outcome_checked", "calibration_notes", "records"],
+      "provenance_required": false,
+      "layer": "judgment",
+      "note": "会话内记录，用于季度校准；仅在用户授权下本地持久化，不上传、不入库"
+    },
+    "alert": {
+      "fields": ["alert_id", "fund_code", "alert_type", "priority", "trigger_condition", "observed_value", "baseline_value", "details", "detected_at", "suggested_watch"],
+      "provenance_required": true,
+      "layer": "fact",
+      "note": "由 triggers/rules.yaml 生成，不是能力单元输出"
+    }
+  },
+
+  "semantic_fields_ref": "data/semantic-fields.yaml",
+  "forbidden": ["在模板或能力文件中重新定义字段", "输出未经 provenance 标注的数值", "把 estimated 值写成实测值"]
+}

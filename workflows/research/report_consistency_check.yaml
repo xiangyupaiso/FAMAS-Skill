@@ -1,0 +1,31 @@
+id: research/report_consistency_check
+version: "2.0.0"
+name: "招募书条款与实际运作一致性核对"
+category: research
+intent: ["有没有超仓位", "符合合同吗", "条款一致性", "港股通权限用了吗", "基准偏离", "合规核对"]
+inputs:
+  fund_code: {type: string, required: true}
+  report_period: {type: string, required: true}
+defaults:
+  check_stock_position_band: true
+  check_asset_permissions: true
+  check_benchmark: true
+  forbid_violation_verdict: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: periodic_report_reader
+    with: {report_type: "quarterly", report_period: "$inputs.report_period"}
+  - use: performance_metrics
+    with: {lookback: "$inputs.report_period"}
+  - use: cost_model
+  - use: devils_advocate
+    with: {upstream_blocks: "$steps"}
+  - use: synthesis
+    with: {lens: "risk", upstream_blocks: "$steps"}
+render: periodic_report_memo
+notes:
+  - "核对项：股票仓位上下限、可投资产类别与港股通/衍生品权限、业绩基准、特殊限制条款"
+  - "只输出'条款原文 / 观测值 / 是否落在约束内'，禁止输出'违规/合规'等定性法律判断"
+  - "报告内费用明细与 fee_schedule 口径差异列入 clause_consistency_findings"
+  - "结论落在'需关注事项与观测指标'，不输出调仓或处置建议"

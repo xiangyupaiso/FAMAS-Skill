@@ -1,0 +1,26 @@
+id: core/c_portfolio
+version: "2.0.0"
+name: "组合持仓诊断"
+category: core
+intent: ["诊断持仓", "组合诊断", "再平衡", "持仓体检", "我的组合怎么样"]
+inputs:
+  holdings: {type: list, required: true, desc: "基金代码 + 权重，合计 100%"}
+  lookback: {type: string, required: false, default: "3y"}
+  lens: {type: string, required: false, default: "retail"}
+defaults:
+  correlation_window: "3y"
+  tail_quantile: 0.05
+  weight_sum_expect: 1.0
+steps:
+  - use: portfolio_view
+    with: {holdings: "$inputs.holdings", lookback: "$inputs.lookback"}
+  - parallel:
+      - cost_model
+      - relative_compare
+  - use: synthesis
+    with: {lens: "$inputs.lens", upstream_blocks: "$steps"}
+render: portfolio_diagnosis
+notes:
+  - "对应 v1 Workflow C；权重合计不为 100% 时先报 weight_sum 并要求修正，不自动归一化"
+  - "输出风险敞口与适配度，不输出调仓方案"
+  - "穿透计算依赖季报持仓，模板必须标注季末快照非实时"

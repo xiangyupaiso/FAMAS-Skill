@@ -1,0 +1,38 @@
+# 视角定义 — 同一批事实块，换结论框架不改数字
+version: "2.0.0"
+default: retail
+
+lenses:
+  retail:
+    name: "个人投资者"
+    focus: ["适配度", "风险等级", "持有期", "能不能讲清楚"]
+    output_frame: "适配投资者类型 + 核心风险提示 + 需关注的观测指标"
+    forbidden: ["交易信号", "目标价", "收益预测"]
+    typical_workflows: ["core/a_single_fund", "core/c_portfolio", "lifecycle/suitability_check"]
+  fund_manager:
+    name: "基金经理 / 策略研究"
+    focus: ["能力圈", "风格漂移", "策略容量", "逆风表现", "叙事一致性"]
+    output_frame: "策略一致性检验 + 容量约束 + 反证清单"
+    forbidden: ["交易信号", "对基金经理的能力评价"]
+    typical_workflows: ["events/quarterly_holdings_review", "research/skill_vs_luck", "research/manager_narrative_drift"]
+  fof:
+    name: "FOF / 配置盘"
+    focus: ["组合边际贡献", "替代性", "相关性", "拥挤度"]
+    output_frame: "相对现有组合的边际贡献 + 穿透后真实敞口"
+    forbidden: ["产品配置比例建议", "调仓指令"]
+    typical_workflows: ["research/pseudo_diversification", "lifecycle/goal_backsolve", "judgment/institutional_evidence"]
+  risk:
+    name: "风控 / 合规"
+    focus: ["回撤", "集中度", "流动性", "适当性", "条款一致性"]
+    output_frame: "风险敞口清单 + 阈值监控项 + 条款核对结果"
+    forbidden: ["违规/合规等定性法律判断", "处置建议"]
+    typical_workflows: ["research/report_consistency_check", "events/alert_reassessment", "core/d_monitor"]
+  advisor:
+    name: "渠道投顾"
+    focus: ["适当性", "话术边界", "需披露事项"]
+    output_frame: "沟通要点 + 禁止表述清单 + 适配度"
+    forbidden: ["推荐", "优先关注", "任何交易信号"]
+    typical_workflows: ["lifecycle/suitability_check"]
+
+extension_rule: "新增视角只需在此加一段，不改能力单元、工作流或模板；synthesis 通过 lens 参数读取"
+hard_rule: "所有 lens 共享同一事实块与同一合规闸；切换视角不得改变任何数字，也不得绕过 policies/compliance.md"

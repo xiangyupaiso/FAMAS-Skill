@@ -1,0 +1,79 @@
+# 监控调度规则集 — 原 v1 watchtower 降格而来
+# 本文件不是 Agent，不进入 DAG 的 use；由宿主调度器按 check_interval 触发一次 core/d_monitor
+version: "2.0.0"
+
+defaults:
+  check_interval: "daily"
+  priority_order: ["high", "medium", "low"]
+  on_trigger:
+    - "生成 alert 对象（字段见 contracts/famas.contract.json#/blocks/alert）"
+    - "按 core/d_monitor 输出预警报告"
+    - "高优先级预警自动 include: events/alert_reassessment，形成告警→重评估闭环"
+  skill_does_not_hold_timers: true
+
+rules:
+  - id: manager_change
+    name: "经理变更"
+    priority: high
+    fields: [manager_roster, fund_announcements]
+    conditions:
+      - "在任经理名单较上期发生增删"
+      - "共管关系建立或解除"
+    output: ["变更前后名单", "公告日期与来源"]
+
+  - id: scale_change
+    name: "规模异动"
+    priority: high
+    fields: [scale_history]
+    conditions:
+      - "单季度规模变化绝对值 >= 30%"
+      - "规模突破策略容量阈值 100 亿"
+      - "规模跌破清盘线阈值 2 亿"
+    output: ["上期规模", "本期规模", "变动比例", "触发阈值"]
+
+  - id: style_drift
+    name: "风格漂移"
+    priority: medium
+    fields: [holdings, fund_nav_history]
+    conditions:
+      - "风格偏离历史中枢 >= 1 个标准差（中枢窗口由工作流声明，默认近 8 季）"
+      - "季度风格漂移距离较上期显著增大"
+    output: ["漂移距离", "中枢与标准差", "所用方法"]
+
+  - id: performance_lag
+    name: "业绩掉队"
+    priority: high
+    fields: [fund_nav_history, index_quotes]
+    conditions:
+      - "连续 2 个季度跑输合同业绩基准 >= 5%"
+      - "同类排名下滑至后 50%（需声明同类划分口径）"
+    output: ["逐季超额收益", "基准名称", "同类样本范围"]
+
+  - id: fee_change
+    name: "费率调整"
+    priority: medium
+    fields: [fee_schedule, fund_announcements]
+    conditions:
+      - "管理费率 / 托管费率 / 销售服务费率发生调整"
+      - "新增费用项目"
+    output: ["调整前后费率", "生效日期", "公告来源"]
+
+  - id: announcement_risk
+    name: "公告风险"
+    priority: high
+    fields: [fund_announcements]
+    conditions:
+      - "大额赎回公告"
+      - "清盘风险提示"
+      - "暂停申购 / 限购 / 分红 / 份额拆分等公司行动公告"
+    output: ["公告标题", "发布机构", "发布日期", "关键条款摘录"]
+
+customization:
+  note: "用户可通过 core/d_monitor 的 inputs 覆盖阈值；覆盖只作用于本次会话，不写回本文件"
+  overridable: ["scale_change.threshold", "style_drift.sigma", "performance_lag.quarters", "performance_lag.threshold", "check_interval"]
+
+constraints:
+  - "预警只描述事实与触发条件，不给交易建议"
+  - "suggested_watch 只能是'需关注的观测指标'，不能是操作指令"
+  - "每个 observed_value 必须带 source + as_of + confidence"
+  - "条款与公告不得做概率性解读"

@@ -1,0 +1,30 @@
+id: judgment/quarterly_calibration
+version: "2.0.0"
+name: "决策日志季度校准"
+category: judgment
+intent: ["季度复盘", "之前判断对不对", "校准", "决策日志", "回看一下历史结论"]
+inputs:
+  decision_log_refs: {type: list, required: true, desc: "待回看的决策记录 ID 列表"}
+  review_period: {type: string, required: true}
+defaults:
+  compare_to_actual: true
+  attribute_error_source: true
+  update_invalidation_conditions: true
+  local_only: true
+steps:
+  - loop:
+      over: "$inputs.decision_log_refs"
+      use: performance_metrics
+      as: realised_metrics
+  - use: periodic_report_reader
+    with: {report_type: "quarterly", report_period: "$inputs.review_period"}
+  - use: devils_advocate
+    with: {upstream_blocks: "$steps"}
+  - use: synthesis
+    with: {lens: "fund_manager", decision_log_refs: "$inputs.decision_log_refs", upstream_blocks: "$steps"}
+render: calibration_report
+notes:
+  - "v2.0 L2：从'会写报告'到'有专业度'的分水岭。数据大家都能接，校准记录不能"
+  - "逐条回看：原假设是否成立、失效条件是否触发、结论与实际偏离多少、误差来自数据/口径/框架哪一层"
+  - "决策日志仅在用户授权下本地持久化，不上传、不入库、不进入仓库"
+  - "校准结论用于更新后续判断的失效条件与置信度上限，不用于评价用户"

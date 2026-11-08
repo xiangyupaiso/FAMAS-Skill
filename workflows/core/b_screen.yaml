@@ -1,0 +1,26 @@
+id: core/b_screen
+version: "2.0.0"
+name: "行业 / 偏好筛选与横向对比"
+category: core
+intent: ["筛选基金", "找基金", "哪只基金", "科技主题", "红利低波", "基金对比"]
+inputs:
+  preference: {type: string, required: true, desc: "行业/主题/风格/资产类别的自然语言描述"}
+  scope: {type: string, required: false, default: "all", desc: "主动/被动/ETF/联接/QDII"}
+  top_n: {type: integer, required: false, default: 10}
+  lens: {type: string, required: false, default: "retail"}
+defaults:
+  min_target_exposure: 0.60
+  pseudo_theme_flag: true
+  report_period_align: true
+steps:
+  - use: universe_scan
+    with: {preference: "$inputs.preference", scope: "$inputs.scope", top_n: "$inputs.top_n"}
+  - use: relative_compare
+    with: {fund_codes: "$steps.universe_scan.candidate_pool.top_n_codes", dimensions: "auto"}
+  - use: synthesis
+    with: {lens: "$inputs.lens", upstream_blocks: "$steps"}
+render: screening_report
+notes:
+  - "对应 v1 Workflow B；候选池必须有样本漏斗，排序必须给可量化依据"
+  - "输出为匹配度排序，不是推荐排序；推荐性措辞由合规闸拦截"
+  - "用户指定'只对比费率和经理'时裁剪 relative_compare 的 dimensions，不改工作流文件"

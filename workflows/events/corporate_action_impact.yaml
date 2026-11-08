@@ -1,0 +1,27 @@
+id: events/corporate_action_impact
+version: "2.0.0"
+name: "公司行动条款影响"
+category: events
+intent: ["分红", "拆分", "限购", "暂停申购", "大额赎回条款", "公告影响"]
+inputs:
+  fund_code: {type: string, required: true}
+  event_type: {type: string, required: true}
+  announcement_date: {type: string, required: false}
+  hold_period: {type: number, required: false, default: 1, desc: "已持有年限，用于赎回费档位"}
+defaults:
+  quote_original_clause: true
+  forbid_probability_interpretation: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: cost_model
+    with: {horizon: "$inputs.hold_period"}
+  - use: performance_metrics
+    with: {lookback: "1y"}
+  - use: synthesis
+    with: {lens: "risk", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "公告条款照录原文关键句，不做概率性解读、不推测后续动作"
+  - "覆盖分红、份额拆分、限购/暂停申购、大额赎回、清盘风险提示等 corporate_actions"
+  - "影响以'对成本、流动性、适配度的可观测量变化'呈现，不给操作建议"

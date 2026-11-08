@@ -1,0 +1,38 @@
+id: events/periodic_report_deep_read
+version: "2.0.0"
+name: "定期报告深度阅读（季报 / 半年报 / 年报）"
+category: events
+intent: ["读季报", "读半年报", "中期报告", "读年报", "基金报告", "定期报告", "这份报告讲了什么"]
+inputs:
+  fund_code: {type: string, required: true}
+  report_type: {type: string, required: true, desc: "quarterly / interim / annual"}
+  report_period: {type: string, required: true, desc: "YYYYQn 或 YYYYH1 / YYYY"}
+  compare_periods: {type: integer, required: false, default: 2}
+  lens: {type: string, required: false, default: "fund_manager"}
+defaults:
+  quote_original: true
+  do_not_store_full_text: true
+  mark_audit_status: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: periodic_report_reader
+    with: {fund_code: "$inputs.fund_code", report_type: "$inputs.report_type", report_period: "$inputs.report_period", compare_periods: "$inputs.compare_periods"}
+  - parallel:
+      - performance_metrics
+      - cost_model
+  - conditional:
+      when: "$inputs.report_type == 'annual'"
+      use: people
+  - use: devils_advocate
+    with: {upstream_blocks: "$steps"}
+  - use: synthesis
+    with: {lens: "$inputs.lens", upstream_blocks: "$steps"}
+render: periodic_report_memo
+notes:
+  - "补齐 v1/v2 缺口：把定期报告当作被阅读的文档，而非只是 holdings 的来源标签"
+  - "季报不推定存在财务报表或审计意见；中期报告标明是否未经审计；年报照录审计意见原文"
+  - "报告全文运行时读取、读而不存；只输出章节定位与原文摘录，不打包再分发"
+  - "报告期末快照，非实时；报告期与披露日期并列标注"
+  - "章节片段进入事实块前必须做 document_title_match 校验；跨文档误召回命中否决项时结论判 invalid（见 capabilities/periodic_report_reader.md）"
+  - "业绩对照前核对 benchmark 生效日与变更公告；报告期内基准变更则跨期对照标 benchmark_version_break"

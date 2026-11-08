@@ -1,0 +1,28 @@
+id: research/share_class_breakeven
+version: "2.0.0"
+name: "份额类别与场内场外成本临界点"
+category: research
+intent: ["A 类还是 C 类", "场内 ETF 还是场外联接", "持有多久划算", "份额选择"]
+inputs:
+  fund_codes: {type: list, required: true, desc: "同策略的多个份额类别或 ETF 与联接基金代码"}
+  horizon: {type: number, required: true, desc: "拟持有年限"}
+defaults:
+  step_months: 3
+  include_redemption_tiers: true
+  include_trading_cost: true
+steps:
+  - loop:
+      over: "$inputs.fund_codes"
+      use: fund_profile
+      as: share_profiles
+  - use: cost_model
+    with: {compare_codes: "$inputs.fund_codes", horizon: "$inputs.horizon"}
+  - use: relative_compare
+    with: {fund_codes: "$inputs.fund_codes", dimensions: ["cost"]}
+  - use: synthesis
+    with: {lens: "retail", upstream_blocks: "$steps"}
+render: screening_report
+notes:
+  - "v1 未覆盖。纯计算、可复算、不依赖主观判断，接 MCP 后立刻能产出'专业感'"
+  - "cost_model 会输出逐年 TCR 表与 breakeven_horizon；临界点不是持有建议"
+  - "必须计入赎回费随持有期递减的档位与场内交易的隐性成本，假设参数集中在 assumptions"

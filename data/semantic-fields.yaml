@@ -1,0 +1,254 @@
+# 语义字段字典 — Core 与工作流唯一认识的字段
+# 字段定义只在此处；契约见 contracts/famas.contract.json，取数规则见 data/gateway.md
+version: "2.0.0"
+trust_scale: "policies/source-trust.md（L1 一手 > L2 持牌 > L3 开源 > L4 禁用）"
+
+fields:
+  fund_basic:
+    desc: "基金基本标识与类型"
+    basis: "6 位代码 + 名称 + 类型 + 成立日 + 管理人"
+    trust_min: L1
+    freshness: "7d"
+    provider_hints: [fund_basic_data, fund_universe]
+  fund_classification:
+    desc: "主动/被动、资产类别、行业主题标签、份额类别"
+    basis: "分类标准需显式声明"
+    trust_min: L2
+    freshness: "30d"
+    provider_hints: [fund_basic_data, fund_classification]
+  benchmark:
+    desc: "合同业绩基准与复合基准权重"
+    basis: "照录合同原文"
+    trust_min: L1
+    freshness: "180d"
+    provider_hints: [fund_disclosure, fund_basic_data]
+    versioning: "必须带 effective_date 与 version；报告期内发生基准变更时并列标注新旧文本，禁止用变更后基准回算变更前区间"
+    note_r2: "2026 年存量产品业绩比较基准分批调整（证监会《公开募集证券投资基金业绩比较基准指引》过渡期），跨期业绩对照前须核对变更公告；见 capabilities/performance_metrics.md 与 judgment/veto-rules.yaml#benchmark_version_change"
+  fee_schedule:
+    desc: "管理费/托管费/销售服务费/申赎费档位"
+    basis: "年化百分比；赎回费按持有期分档"
+    trust_min: L1
+    freshness: "30d"
+    provider_hints: [fund_disclosure, fee_data]
+  holder_structure:
+    desc: "机构/个人持有比例、集中度、近 2 期变化"
+    basis: "季末快照"
+    trust_min: L1
+    freshness: "季度"
+    provider_hints: [fund_disclosure, fund_reports]
+  fund_announcements:
+    desc: "基金公告：经理变更、清盘、限购、分红、赎回等"
+    basis: "发布机构 + 发布日期 + 标题"
+    trust_min: L1
+    freshness: "1d"
+    provider_hints: [announcement_feed, fund_disclosure]
+  fund_nav_history:
+    desc: "历史净值序列"
+    basis: "单位净值/累计净值，标注复权方式、频率、缺失值处理"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [nav_series, fund_quotes]
+  fund_nav:
+    desc: "最近一个交易日净值"
+    basis: "标注交易状态（盘前/盘中/盘后/休市）"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [fund_quotes, nav_series]
+  index_quotes:
+    desc: "基准指数与风格指数行情"
+    basis: "与净值窗口对齐，复权方式一致"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [index_series, market_quotes]
+  peer_nav:
+    desc: "同类基金净值序列，用于分位与相关性"
+    basis: "同类划分口径需显式声明"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [nav_series, fund_universe]
+  holdings:
+    desc: "季报/半年报/年报持仓明细"
+    basis: "带 report_period（YYYYQn），季末快照非实时"
+    trust_min: L1
+    freshness: "季度"
+    provider_hints: [fund_reports, portfolio_holdings]
+  turnover_history:
+    desc: "历史换手率"
+    basis: "年化或半年口径需标注"
+    trust_min: L2
+    freshness: "半年"
+    provider_hints: [fund_reports, fund_analytics]
+  scale_history:
+    desc: "历史规模与份额变化"
+    basis: "亿元；季度快照"
+    trust_min: L1
+    freshness: "季度"
+    provider_hints: [fund_reports, fund_basic_data]
+  trading_costs:
+    desc: "隐性交易成本估算参数（冲击成本、买卖价差）"
+    basis: "估算值，必须标 assumptions 与 estimated=true"
+    trust_min: L2
+    freshness: "30d"
+    provider_hints: [market_microstructure, fund_analytics]
+    source_type: "assumption-driven"
+    note: "允许无 provider 覆盖：不可得时由 cost_model 的 assumptions 提供默认参数，标 estimated 并列入 missing_fields，不得伪装成实测数据"
+  fund_universe:
+    desc: "全市场基金列表与可筛选标签"
+    basis: "带样本量与数据时点"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [fund_universe, fund_screening]
+  etf_linkage:
+    desc: "场内 ETF 与场外联接基金映射及流动性、费率"
+    basis: "一一对应或一对多需标明"
+    trust_min: L2
+    freshness: "7d"
+    provider_hints: [fund_universe, etf_data]
+  manager_roster:
+    desc: "在任基金经理名单与任职起止"
+    basis: "以公告为准"
+    trust_min: L1
+    freshness: "1d"
+    provider_hints: [manager_data, fund_announcements]
+  manager_history:
+    desc: "经理历史管理产品、任职区间、共管与离任记录"
+    basis: "以公告为准"
+    trust_min: L1
+    freshness: "30d"
+    provider_hints: [manager_data]
+  manager_performance:
+    desc: "经理各任职区间产品业绩与回撤"
+    basis: "区间须显式声明"
+    trust_min: L2
+    freshness: "季度"
+    provider_hints: [manager_data, nav_series]
+  macro_rates:
+    desc: "利率水平、收益率曲线、国债收益率分位"
+    basis: "分位须注明回看窗口"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [macro_data, bond_market]
+  macro_fx:
+    desc: "人民币汇率走势与波动率"
+    basis: "标注币种对与窗口"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [macro_data, fx_market]
+  style_index:
+    desc: "大盘/小盘、价值/成长风格指数相对强度"
+    basis: "注明指数对与窗口"
+    trust_min: L2
+    freshness: "1d"
+    provider_hints: [index_series, style_factors]
+  policy_text:
+    desc: "货币/财政/产业/监管政策原文要点"
+    basis: "发布机构 + 发布日期 + 标题；媒体转述标 second_hand"
+    trust_min: L1
+    freshness: "7d"
+    provider_hints: [policy_feed, news_announcements]
+  research_reports:
+    desc: "研报文本与评级（仅作证据，不作结论）"
+    basis: "机构名 + 发布时间；授权范围内运行时读取，不落库"
+    trust_min: L2
+    freshness: "按发布"
+    provider_hints: [research_data, news_announcements]
+    release_note: "v2.0 L3 机构语料输入；读而不存，引用带 opinion_ref"
+  assumption_tables:
+    desc: "研报关键假设表及其历史版本（v2.0 校验用）"
+    basis: "机构名 + 版本日期"
+    trust_min: L2
+    freshness: "按发布"
+    provider_hints: [research_data]
+    release_note: "v2.0 L3：把假设表当成可校验对象，而非结论来源"
+  corporate_actions:
+    desc: "分红、拆分、限购、暂停申购、大额赎回等公司行动"
+    basis: "公告日期 + 生效日期 + 关键条款"
+    trust_min: L1
+    freshness: "1d"
+    provider_hints: [announcement_feed, fund_disclosure]
+  dividend_history:
+    desc: "历史分红记录"
+    basis: "除权日、每份分红金额"
+    trust_min: L1
+    freshness: "按事件"
+    provider_hints: [fund_disclosure, corporate_actions]
+  portfolio_input:
+    desc: "用户输入的持仓与权重"
+    basis: "代码 + 权重，合计 100%；用户数据，非外部取数"
+    trust_min: L1
+    freshness: "本次会话"
+    provider_hints: [user_input]
+    note: "涉及用户数据，遵循双重授权；不写入仓库"
+
+  # ---- 定期报告阅读专用字段（v2.0 新增）----
+  periodic_report_full:
+    desc: "基金季度报告 / 中期报告（半年报） / 年度报告全文或章节文本"
+    basis: "带 report_type、report_period、disclosure_date、发布机构；PDF/HTML 原文"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_disclosure, fund_reports, document_retrieval]
+    note: "运行时读取，读而不存；仅引用章节与原文摘录，不打包全文到仓库"
+    retrieval_granularity: "文档级检索 + 章节片段，**不保证命中目标文档的指定章节**；同名/同管理人/同主题文档极易误召回"
+    note_r1: "2026-11-07 实测：连接器能取到季报与招募说明书的元数据及 §2 产品概况片段"
+    note_r2: "补测更正：以完整章节标题检索可命中 §4.4 原文，但返回的几乎全是其他基金的同期章节；目标文档章节仍未命中。必须先做 document_title_match 硬校验，未命中目标标 not_retrievable，标题不匹配标 rejected_cross_document。见 capabilities/periodic_report_reader.md"
+  manager_commentary:
+    desc: "管理人报告：报告期内投资策略与运作分析、业绩说明、后市展望"
+    basis: "原文摘录 + 章节定位，不做评价性改写"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_reports, document_retrieval]
+    note_r1: "2026-11-07 实测：基金合同/§2 的策略描述是合同层面表述，不得冒充报告期运作说明"
+    note_r2: "补测更正：章节内容本身可检索，但**跨文档误召回**是主要风险；任何摘录须先校验 title 主体/报告类型/报告期，不匹配整条丢弃并标 rejected_cross_document"
+  portfolio_report:
+    desc: "投资组合报告：资产组合、行业/个股配置、债券与衍生品、基金投资"
+    basis: "报告期快照，与 holdings 同源但保留报告内原始分类口径"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_reports, portfolio_holdings]
+  financial_statements:
+    desc: "财务报表与附注：资产负债表、利润表、净值变动表"
+    basis: "年报为经审计；中期报告需注明是否未经审计"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_reports, financial_data]
+  auditor_opinion:
+    desc: "年度报告的审计意见类型与会计师事务所"
+    basis: "原文照录意见类型；仅年报适用"
+    trust_min: L1
+    freshness: "年度"
+    provider_hints: [fund_reports]
+  report_holder_changes:
+    desc: "报告内份额变动、持有人结构与集中度"
+    basis: "期初/期末份额、机构占比变化"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_reports]
+  material_events:
+    desc: "重大事项、关联交易、诉讼、处罚、经理与治理变更"
+    basis: "公告/报告内披露，带披露日期"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_reports, announcement_feed]
+  report_fee_detail:
+    desc: "报告内计提的费用明细（管理费、托管费、销售服务费等）"
+    basis: "用于与 fee_schedule 交叉验证口径"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_reports, financial_data]
+  prospectus_terms:
+    desc: "招募说明书 / 基金合同的投资范围与限制条款"
+    basis: "股票仓位上下限、港股通/衍生品权限、业绩基准、特殊条款"
+    trust_min: L1
+    freshness: "180d"
+    provider_hints: [fund_disclosure, fund_basic_data]
+  narrative_history:
+    desc: "跨期管理人表述序列（近 N 期），用于叙事漂移检验"
+    basis: "每期带 report_period 与原文摘录"
+    trust_min: L1
+    freshness: "按披露"
+    provider_hints: [fund_reports, document_retrieval]
+
+rules:
+  - "未在本字典登记的语义字段不得出现在工作流的 requires 中"
+  - "字段口径变更只改本文件，不改能力单元与工作流"
+  - "运行时工具名由 tools/list 探测，本文件不含任何厂商工具名或端点"

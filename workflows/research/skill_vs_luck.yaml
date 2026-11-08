@@ -1,0 +1,26 @@
+id: research/skill_vs_luck
+version: "2.0.0"
+name: "超额收益稳健性 / 基准敏感性"
+category: research
+intent: ["运气还是能力", "超额稳不稳", "基准换一个还成立吗", "业绩归因稳健性"]
+inputs:
+  fund_code: {type: string, required: true}
+  lookback: {type: string, required: false, default: "5y"}
+  alt_benchmarks: {type: list, required: false, default: []}
+defaults:
+  rolling_window: "12m"
+  min_windows: 20
+  report_diff_only: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: performance_metrics
+    with: {lookback: "$inputs.lookback", benchmark_override: "$inputs.alt_benchmarks"}
+  - use: people
+  - use: synthesis
+    with: {lens: "fund_manager", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "performance_metrics 会重算合同基准与替代基准下的超额收益并输出差值"
+  - "报告只报差值与滚动稳定性分布，不下'是能力/是运气'的定性断言"
+  - "四段式中的反证必须包含'换基准后超额消失'或'滚动窗口不稳定'至少一项"

@@ -1,0 +1,27 @@
+id: lifecycle/goal_backsolve
+version: "2.0.0"
+name: "目标反推配置约束"
+category: lifecycle
+intent: ["教育金", "养老金", "20 年后要用", "目标反推", "攒够 X 万"]
+inputs:
+  goal: {type: object, required: true, desc: "目标金额、用途、是否有中途支取"}
+  horizon: {type: number, required: true, desc: "期限，单位年"}
+  initial_capital: {type: number, required: false, default: 0}
+  risk_profile: {type: string, required: true}
+defaults:
+  output_mode: "constraints_only"
+  forbid_product_recommendation: true
+steps:
+  - use: macro_context
+    with: {as_of: "$runtime.as_of"}
+  - use: universe_scan
+    with: {preference: "$inputs.goal.category", scope: "all"}
+  - use: cost_model
+    with: {horizon: "$inputs.horizon"}
+  - use: synthesis
+    with: {lens: "fof", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "v1 未覆盖。反推的是'达成目标所必需的期限、成本与波动约束'，不是选基金"
+  - "output_mode=constraints_only：禁止输出具体产品配置比例，规避投资建议红线"
+  - "所有缺口显式列出，不用假设收益率填补；收益率假设若使用必须标注为假设而非预测"

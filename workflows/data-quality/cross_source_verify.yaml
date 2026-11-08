@@ -1,0 +1,30 @@
+id: data-quality/cross_source_verify
+version: "2.0.0"
+name: "多源交叉校验与分歧提示"
+category: data-quality
+intent: ["数据对不上", "两个平台数字不一样", "核对一下", "多源校验", "检查一下数据源"]
+inputs:
+  fund_code: {type: string, required: false}
+  fields: {type: list, required: false, default: [], desc: "待校验语义字段；留空则做全字段轻量自检"}
+  providers: {type: list, required: false, default: [], desc: "指定对比的数据源；留空则用全部已连接源"}
+defaults:
+  light_mode_on_empty_fields: true
+  align_caliber_first: true
+  list_all_conflicts: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: performance_metrics
+    with: {lookback: "1y"}
+  - use: relative_compare
+    with: {fund_codes: "[$inputs.fund_code]", dimensions: ["cost", "performance"]}
+  - use: synthesis
+    with: {lens: "risk", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "把'权威'变成可验证能力：先核对口径（周期/复权/单位/份额类别/报告期），口径不同不算冲突"
+  - "口径一致仍不一致 -> 写入 envelope.source_conflicts，列全部来源的值、时点、等级，不静默取一个"
+  - "轻量模式（fields 为空）用于 SETUP.md 第 5 节首启自检：只输出已连接源、可用字段、待补字段、映射冲突"
+  - "关键结论所依赖字段存在未解释分歧时命中一票否决，标注'前提不成立'"
+  - "**单源降级**：仅 1 个已连接源时，不做『跨源一致性』结论，改做同源内部一致性校验——① 带窗口 vs 无窗口的重复指标 ② 结构化值 vs 一手文档原文（单位/量级） ③ 可加总明细 vs 派生汇总值；分歧写入 envelope.source_conflicts 并标 same_source_conflict，不得表述为多源交叉验证通过"
+  - "文档片段须先做 document_title_match 校验；跨文档误召回单列 rejected_cross_document，命中否决项结论判 invalid"

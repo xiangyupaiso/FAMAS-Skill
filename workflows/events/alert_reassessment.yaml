@@ -1,0 +1,25 @@
+id: events/alert_reassessment
+version: "2.0.0"
+name: "预警后影响重评估"
+category: events
+intent: ["预警之后怎么办", "重新评估", "异动影响", "要不要调整", "这个预警严重吗"]
+inputs:
+  alert_id: {type: string, required: false}
+  fund_code: {type: string, required: false}
+  alert_type: {type: string, required: false}
+defaults:
+  require_both_alert_and_baseline: true
+  veto_on_high_priority: true
+steps:
+  - include:
+      workflow: core/a_single_fund
+      with: {fund_code: "$inputs.fund_code", lens: "risk"}
+  - use: relative_compare
+    with: {fund_codes: "[$inputs.fund_code]", dimensions: ["performance", "cost", "manager"]}
+  - use: synthesis
+    with: {lens: "risk", alert_context: "$inputs.alert_type", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "v1 断链补齐：由 core/d_monitor 高优先级预警自动 include，形成告警→重评估闭环"
+  - "必须同时引用预警观测值与基线值，缺基线则标 missing_fields，不下'影响重大'结论"
+  - "结论落在'适配度是否变化 + 哪些观测指标需继续跟踪'，不给调仓指令"

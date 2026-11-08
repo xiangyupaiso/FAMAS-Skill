@@ -1,0 +1,36 @@
+id: core/d_monitor
+version: "2.0.0"
+name: "持续监控预警"
+category: core
+intent: ["监控基金", "基金预警", "异动提醒", "设置巡检", "帮我盯着"]
+inputs:
+  watchlist: {type: list, required: true, desc: "监控基金代码列表"}
+  check_interval: {type: string, required: false, default: "daily"}
+  rule_overrides: {type: object, required: false, default: {}}
+defaults:
+  auto_reassess_on_high: true
+  priority_order: ["high", "medium", "low"]
+scheduler:
+  rules_file: "triggers/rules.yaml"
+  note: "Core 不常驻、不持有定时器；由宿主调度器按 check_interval 触发本工作流一次"
+steps:
+  - loop:
+      over: "$inputs.watchlist"
+      use: fund_profile
+      as: profiles
+  - loop:
+      over: "$inputs.watchlist"
+      use: performance_metrics
+      as: nav_metrics
+  - branch:
+      cases:
+        - when: "$runtime.high_priority_alerts_count > 0"
+          include: {workflow: "events/alert_reassessment", with: {alert_id: "$runtime.first_high_alert_id"}}
+      default: noop
+  - use: synthesis
+    with: {lens: "risk", upstream_blocks: "$steps"}
+render: alert_report
+notes:
+  - "对应 v1 Workflow D，但 watchtower 已降格为 triggers/rules.yaml 规则集"
+  - "高优先级预警自动 include 重评估工作流，形成告警→重评估闭环（v1 断在这里）"
+  - "suggested_watch 只能是观测指标，不能是操作指令；由合规闸校验"

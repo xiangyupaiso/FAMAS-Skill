@@ -1,0 +1,38 @@
+# 数据源声明：东方财富 妙想 / Choice 系
+id: eastmoney-miaoxiang
+name: "东方财富妙想 Skills（Choice 数据底座）"
+trust: L2
+priority: 30
+status: "公开资料显示 2026 年已面向 AI 助手提供金融数据与选股类技能包"
+
+auth:
+  recommended: "按厂商页面说明在宿主客户端安装技能包 / 完成账号授权"
+  alternative: "厂商提供的 API 授权方式"
+  token_location: "宿主客户端保管，本仓库不存放"
+
+capability_hints:
+  - fund_screening
+  - fund_universe
+  - fund_quotes
+  - nav_series
+  - market_quotes
+  - news_announcements
+  - fund_basic_data
+  - fund_classification
+
+coverage:
+  - fund_basic
+  - fund_classification
+  - fund_universe
+  - fund_nav
+  - fund_nav_history
+  - index_quotes
+  - fee_schedule
+  - fund_announcements
+  - policy_text
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见厂商官方接入文档，本文件不内置端点"
+limits: "技能包范围与数据权限以厂商账号实际情况为准"
+facts_source: "2026 年公开资料整理（行业研报与财经媒体报道），非实时核验"
+disclaimer: "技能包形态、可用接口与授权方式以东方财富官方文档为准；本仓库不内置端点或凭据"

@@ -1,0 +1,26 @@
+id: research/pseudo_diversification
+version: "2.0.0"
+name: "伪分散穿透识别"
+category: research
+intent: ["伪分散", "看着分散其实集中", "真实相关性", "持仓穿透", "是不是买重了"]
+inputs:
+  holdings: {type: list, required: true}
+  lookback: {type: string, required: false, default: "3y"}
+defaults:
+  lookthrough_depth: "top10_holdings"
+  align_report_period: true
+  tail_quantile: 0.05
+steps:
+  - use: portfolio_view
+    with: {holdings: "$inputs.holdings", lookback: "$inputs.lookback"}
+  - use: relative_compare
+    with: {fund_codes: "$inputs.holdings.codes", dimensions: ["holdings", "style"]}
+  - use: performance_metrics
+    with: {lookback: "$inputs.lookback"}
+  - use: synthesis
+    with: {lens: "fof", upstream_blocks: "$steps"}
+render: portfolio_diagnosis
+notes:
+  - "穿透到个股层面计算实际重叠，识别'基金数量多但底层集中'"
+  - "跨报告期持仓禁止混用；相关系数不等于因果，模板不得写成分散性结论"
+  - "输出真实敞口与集中度指标，不给'应该减哪只'的建议"

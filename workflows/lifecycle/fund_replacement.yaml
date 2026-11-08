@@ -1,0 +1,30 @@
+id: lifecycle/fund_replacement
+version: "2.0.0"
+name: "换基金替换评估"
+category: lifecycle
+intent: ["要不要换基金", "换成哪只", "替换评估", "赎回换仓成本", "和现持仓比"]
+inputs:
+  held_fund: {type: string, required: true, desc: "当前持有基金代码"}
+  candidate_fund: {type: string, required: true, desc: "拟替换的候选基金代码"}
+  hold_period: {type: number, required: true, desc: "已持有年限，用于赎回费档位"}
+  lens: {type: string, required: false, default: "retail"}
+defaults:
+  include_redemption_fee: true
+  include_overlap: true
+  include_tax_note: true
+steps:
+  - loop:
+      over: "[$inputs.held_fund, $inputs.candidate_fund]"
+      use: fund_profile
+      as: profiles
+  - parallel:
+      - cost_model
+      - relative_compare
+      - performance_metrics
+  - use: synthesis
+    with: {lens: "$inputs.lens", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "v1 完全空白，但这是真实最高频决策；输出成本差 + 重合度 + 适配度，不给换仓指令"
+  - "必须计入赎回费随持有期递减的档位、申赎费、隐性成本与税费提示"
+  - "结论以四段式呈现：假设 / 证据 / 反证 / 失效条件；反证至少覆盖'换仓成本高于收益差'"

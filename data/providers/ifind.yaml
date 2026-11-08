@@ -1,0 +1,54 @@
+# 数据源声明：同花顺 iFinD MCP
+id: ifind
+name: "同花顺 iFinD 金融 MCP"
+trust: L2
+priority: 10
+status: "公开资料显示 2026 年已开放面向 AI 客户端的 MCP 服务"
+
+auth:
+  recommended: "远程 HTTP + OAuth 2.1（宿主完成浏览器授权）"
+  alternative: "厂商提供的客户端一键接入 / 授权码配置"
+  token_location: "宿主客户端保管，本仓库不存放"
+
+capability_hints:
+  - fund_basic_data
+  - fund_universe
+  - fund_screening
+  - nav_series
+  - fund_quotes
+  - index_series
+  - fund_reports
+  - portfolio_holdings
+  - manager_data
+  - macro_data
+  - announcement_feed
+  - news_announcements
+  - fee_data
+
+coverage:
+  - fund_basic
+  - fund_classification
+  - fund_universe
+  - fund_nav_history
+  - fund_nav
+  - index_quotes
+  - peer_nav
+  - holdings
+  - manager_roster
+  - macro_rates
+  - macro_fx
+  - style_index
+  - fund_announcements
+  - research_reports
+  - periodic_report_full
+  - manager_commentary
+  - portfolio_report
+  - financial_statements
+  - prospectus_terms
+  - narrative_history
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见厂商官方接入文档，本文件不内置端点"
+limits: "开通模块、调用额度与 scopes 以厂商账号实际情况为准"
+facts_source: "2026 年公开资料整理（行业研报、厂商公告与财经媒体报道），非实时核验"
+disclaimer: "接入地址、工具清单、额度与开通条件以同花顺官方文档为准；本仓库不对第三方服务可用性作担保"

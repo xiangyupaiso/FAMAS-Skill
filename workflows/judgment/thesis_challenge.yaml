@@ -1,0 +1,30 @@
+id: judgment/thesis_challenge
+version: "2.0.0"
+name: "结论压力测试 / 反证检验"
+category: judgment
+intent: ["这个结论靠谱吗", "压力测试", "找反证", "最薄弱假设", "挑战一下这个判断", "换个角度看"]
+inputs:
+  fund_code: {type: string, required: true}
+  thesis_ref: {type: string, required: false, desc: "待压测的既有结论或报告引用"}
+  question: {type: string, required: false}
+defaults:
+  check_all_five_modes: true
+  require_alternative_explanation: true
+  cap_confidence: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - parallel:
+      - performance_metrics
+      - cost_model
+      - people
+  - use: devils_advocate
+    with: {upstream_blocks: "$steps", thesis_ref: "$inputs.thesis_ref"}
+  - use: synthesis
+    with: {lens: "fund_manager", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "v2.0 判断层核心场景：对任一已有结论做五类反证（口径/归因/时间/结构/替代解释）"
+  - "devils_advocate 是强制前置，synthesis 的反证段必须引用其输出，不得自行编写"
+  - "输出 confidence_cap 限制结论强度：反证越强，允许的最高置信度越低"
+  - "无反证发现也要写 none_found_and_why 并说明检索范围，不为凑数编造"

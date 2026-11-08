@@ -1,0 +1,31 @@
+id: core/a_single_fund
+version: "2.0.0"
+name: "单基金深度分析"
+category: core
+intent: ["分析基金", "基金评级", "这只基金怎么样", "深度分析", "看看某只基金"]
+inputs:
+  fund_code: {type: string, required: true, desc: "6 位基金代码"}
+  lookback: {type: string, required: false, default: "3y"}
+  lens: {type: string, required: false, default: "retail"}
+defaults:
+  style_drift_sigma: 1.0
+  capacity_threshold_yi: 100
+  liquidation_line_yi: 2
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - parallel:
+      - performance_metrics
+      - cost_model
+  - conditional:
+      when: "fund_profile.fund_type == 'active'"
+      use: people
+  - use: macro_context
+    with: {as_of: "$runtime.as_of", fund_strategy: "$steps.fund_profile.investment_scope"}
+  - use: synthesis
+    with: {lens: "$inputs.lens", upstream_blocks: "$steps"}
+render: rating_card
+notes:
+  - "对应 v1 Workflow A；事实层并行化，观点只在 synthesis 出现一次"
+  - "用户说'只看费率/经理'时由编排器裁剪本 DAG，不新增工作流"
+  - "一票否决项由 synthesis 按 capabilities/synthesis.md 第二节检查"

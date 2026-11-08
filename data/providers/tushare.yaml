@@ -1,0 +1,40 @@
+# 数据源声明：Tushare 官方 MCP
+id: tushare
+name: "Tushare 官方 MCP"
+trust: L2
+priority: 60
+status: "社区型结构化数据服务，提供 HTTP/SDK 与 MCP 形态接入"
+note: "免费起步组合的首选；积分/权限决定可调用接口范围"
+
+auth:
+  recommended: "注册取得 token，通过 stdio 型 MCP 的 env 传入"
+  alternative: "HTTP 接口（由网关适配）"
+  token_location: "环境变量 ${FAMAS_TUSHARE_TOKEN}，本仓库不存放"
+
+capability_hints:
+  - fund_basic_data
+  - fund_universe
+  - nav_series
+  - index_series
+  - fund_reports
+  - macro_data
+  - fund_analytics
+
+coverage:
+  - fund_basic
+  - fund_classification
+  - fund_universe
+  - fund_nav_history
+  - fund_nav
+  - index_quotes
+  - peer_nav
+  - holdings
+  - macro_rates
+  - fee_schedule
+  - manager_roster
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见 Tushare 官方 MCP 文档，本文件不内置端点"
+limits: "积分/权限、调用频率、接口更新时间以官方为准；注意复权与历史修订口径"
+facts_source: "Tushare 官方站点与公开文档，2026-11-07 查阅，非实时核验"
+disclaimer: "字段口径与权限以 Tushare 官方文档为准；本仓库不内置端点或 token"

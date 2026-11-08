@@ -1,0 +1,21 @@
+# 凭据与本地配置：绝不要提交
+mcp.local.json
+mcp.*.local.json
+.env
+.env.*
+*.token
+*.key
+*credentials*
+secrets/
+
+# 运行时产物（Skill 不落库、不再分发数据）
+runtime/
+cache/
+*.db
+*.sqlite
+__pycache__/
+*.pyc
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db

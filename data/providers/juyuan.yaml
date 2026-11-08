@@ -1,0 +1,49 @@
+# 数据源声明：恒生聚源 数据地图 MCP
+id: juyuan
+name: "恒生聚源 数据地图 MCP"
+trust: L2
+priority: 50
+status: "公开资料显示 2026 年已开放面向 AI 客户端的数据地图类 MCP"
+
+auth:
+  recommended: "按厂商文档在宿主客户端配置（多为机构/企业授权）"
+  token_location: "宿主客户端 / 环境变量，本仓库不存放"
+
+capability_hints:
+  - fund_basic_data
+  - fund_disclosure
+  - fund_reports
+  - nav_series
+  - announcement_feed
+  - fee_data
+  - manager_data
+
+coverage:
+  - fund_basic
+  - benchmark
+  - fee_schedule
+  - holder_structure
+  - fund_nav_history
+  - holdings
+  - scale_history
+  - turnover_history
+  - manager_roster
+  - fund_announcements
+  - corporate_actions
+  - dividend_history
+  - periodic_report_full
+  - manager_commentary
+  - portfolio_report
+  - financial_statements
+  - auditor_opinion
+  - report_holder_changes
+  - material_events
+  - report_fee_detail
+  - prospectus_terms
+  - narrative_history
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见厂商官方接入文档，本文件不内置端点"
+limits: "授权范围与可调用表以厂商合同/文档为准"
+facts_source: "2026 年公开资料整理（行业研报与财经媒体报道），非实时核验"
+disclaimer: "接入方式与数据字典以恒生聚源官方文档为准；本仓库不内置端点或凭据"

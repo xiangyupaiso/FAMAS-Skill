@@ -1,0 +1,29 @@
+id: research/manager_narrative_drift
+version: "2.0.0"
+name: "管理人叙事漂移（说的 vs 做的 vs 上期说的）"
+category: research
+intent: ["说的和做的一致吗", "管理人表述", "叙事漂移", "上期说的现在还算数吗", "风格说法变了"]
+inputs:
+  fund_code: {type: string, required: true}
+  compare_periods: {type: integer, required: false, default: 4}
+  lens: {type: string, required: false, default: "fund_manager"}
+defaults:
+  require_three_way_comparison: true
+  quote_original: true
+  forbid_integrity_judgement: true
+steps:
+  - use: periodic_report_reader
+    with: {fund_code: "$inputs.fund_code", report_type: "annual", compare_periods: "$inputs.compare_periods"}
+  - use: performance_metrics
+    with: {lookback: "3y"}
+  - use: relative_compare
+    with: {fund_codes: "[$inputs.fund_code]", dimensions: ["holdings", "style"]}
+  - use: devils_advocate
+    with: {upstream_blocks: "$steps"}
+  - use: synthesis
+    with: {lens: "$inputs.lens", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "三方对照：上期管理人表述 / 本期实际持仓与业绩 / 本期管理人表述，只报差异不评价诚信"
+  - "叙事漂移是 2.0 判断层的重要输入：'表述变化'本身是反证，不是结论"
+  - "所有表述以原文摘录为准，带章节定位与报告期；不得把管理人展望写成 FAMAS 观点"

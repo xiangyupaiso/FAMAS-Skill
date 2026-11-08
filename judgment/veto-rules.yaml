@@ -1,0 +1,58 @@
+# 一票否决规则集 — 优先于任何加权评分
+version: "2.0.0"
+rule: "任一项命中时，synthesis 必须显式降级或标注『前提不成立』，不得被其他维度高分抵消"
+order: "在评分之前执行；全部未命中才允许进入加权评分"
+
+vetoes:
+  - id: liquidation_line
+    name: "规模跌破清盘线阈值"
+    field: "cost_model.scale_assessment.liquidation_line_flag"
+    threshold_yi: 2
+    action: "标注前提不成立，禁止输出星级与适配度分档"
+
+  - id: capacity_breach
+    name: "规模突破策略容量阈值"
+    field: "cost_model.scale_assessment.capacity_flag"
+    threshold_yi: 100
+    action: "策略一致性结论降级为 weak，并列出容量观测指标"
+
+  - id: manager_departure
+    name: "基金经理离任 / 共管关系重大变化"
+    field: "people.roster_changes"
+    action: "标注前提不成立，人员相关假设作废"
+
+  - id: style_drift
+    name: "风格漂移超出历史中枢"
+    field: "performance_metrics.style_drift_distance"
+    threshold_sigma: 1.0
+    action: "风格一致性结论作废，触发重评估"
+
+  - id: missing_critical_fields
+    name: "关键字段大面积缺失"
+    field: "envelope.missing_fields"
+    action: "缺失覆盖关键结论时结论降为 weak，禁止用估算值填补"
+
+  - id: unresolved_source_conflict
+    name: "多源数据存在未解释分歧"
+    field: "envelope.source_conflicts"
+    action: "列分歧表并将结论降为 weak；关键字段分歧时标前提不成立"
+
+  - id: cross_document_recall
+    name: "跨文档误召回：文档片段的标题与目标基金/报告期不匹配"
+    field: "periodic_report.quoted_excerpts"
+    action: "**结论直接判 invalid**，剔除该片段并标 rejected_cross_document；禁止把其他基金的管理人表述、持仓或业绩写入本基金事实块"
+    evidence: "2026-11-07 实测：检索式命中 §4.4 原文时，前 4 条均为其他基金的同期章节，若不校验 title 会把『净值增长 26.24%』误当作目标基金（真实 YTD -24.7006%）"
+
+  - id: benchmark_version_change
+    name: "报告期内业绩比较基准发生变更但未核对版本"
+    field: "performance_metrics.benchmark_used"
+    action: "跨期业绩对照作废或降为 weak，必须并列标注新旧基准与生效日；禁止用变更后基准回算变更前区间"
+    evidence: "2026 年《公开募集证券投资基金业绩比较基准指引》过渡期内分批调整超 4000 只产品；实测多只基金在 2026-06-01 / 2026-07-27 生效新基准"
+
+  - id: report_clause_breach
+    name: "报告观测值落在合同约束之外"
+    field: "periodic_report.clause_consistency_findings"
+    action: "只标注『需关注事项』，禁止输出违规/合规等定性法律判断"
+
+mapping_to_triggers: "规模/经理/风格/冲突类否决项与 triggers/rules.yaml 的监控维度对应，命中即触发 core/d_monitor 高优先级预警并自动 include events/alert_reassessment；文档身份与基准版本类否决项改由 data-quality/provenance_audit 复核，不触发行情式预警"
+threshold_override: "阈值可由工作流 defaults 覆盖；不得在能力单元或模板中硬编码"

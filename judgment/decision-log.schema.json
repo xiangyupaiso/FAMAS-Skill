@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "FAMAS v2.0 决策记录（decision log）",
+  "version": "2.0.0",
+  "note": "会话内生成，仅在用户明确授权下本地持久化。不上传、不入库、不写入仓库。用于 judgment/quarterly_calibration 的季度回看。",
+  "type": "object",
+  "required": ["log_id", "workflow_id", "as_of", "hypothesis", "conclusion", "invalidation_conditions", "review_due"],
+  "properties": {
+    "log_id": {"type": "string", "description": "唯一 ID，建议 famas-<YYYYMMDD>-<序号>"},
+    "workflow_id": {"type": "string"},
+    "fund_code": {"type": "string"},
+    "as_of": {"type": "string", "description": "判断所依据数据的截止时点"},
+    "lens": {"type": "string", "enum": ["retail", "fund_manager", "fof", "risk", "advisor"]},
+    "hypothesis": {"type": "string"},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}, "description": "指向事实块字段的引用列表"},
+    "counter_evidence_ref": {"type": "string", "description": "指向 counter_evidence 块"},
+    "confidence_cap": {"type": "string", "enum": ["strong", "moderate", "weak", "invalid"]},
+    "conclusion": {"type": "string", "description": "适配度结论，不含交易信号"},
+    "invalidation_conditions": {"type": "array", "items": {"type": "string"}},
+    "review_due": {"type": "string", "description": "下次回看日期 YYYY-MM-DD，默认下一季度末"},
+    "outcome_checked": {"type": "boolean", "default": false},
+    "calibration_notes": {"type": "string"},
+    "error_layer": {"type": "string", "enum": ["none", "data", "caliber", "framework", "mixed"]},
+    "deviation": {"type": "string", "description": "结论与实际观测的偏离描述，不填数值预测"},
+    "privacy": {
+      "type": "object",
+      "properties": {
+        "local_only": {"type": "boolean", "default": true},
+        "user_authorized": {"type": "boolean", "default": false}
+      }
+    }
+  },
+  "forbidden": ["交易信号", "目标价", "收益预测", "用户身份信息", "原始研报全文", "数据源凭据"]
+}

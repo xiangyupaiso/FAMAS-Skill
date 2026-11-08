@@ -1,0 +1,25 @@
+id: events/manager_change_impact
+version: "2.0.0"
+name: "基金经理变更影响"
+category: events
+intent: ["经理换了", "基金经理离职", "新增共管", "共管解除", "换人影响"]
+inputs:
+  fund_code: {type: string, required: true}
+  change_event: {type: object, required: true, desc: "变更前后名单、公告日期、类型"}
+defaults:
+  veto_on_departure: true
+  compare_style_drift: true
+steps:
+  - use: people
+    with: {fund_code: "$inputs.fund_code"}
+  - use: performance_metrics
+    with: {lookback: "3y"}
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: synthesis
+    with: {lens: "fund_manager", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "经理离任命中 capabilities/synthesis.md 的一票否决项，须显式标注'前提不成立'"
+  - "共管基金须列出全部在任经理，不推定主理人；任职区间以公告为准"
+  - "不预测离任概率、不评价继任者能力强弱，只报事实差异与需跟踪的观测指标"

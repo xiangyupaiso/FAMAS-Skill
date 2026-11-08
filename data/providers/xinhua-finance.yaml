@@ -1,0 +1,32 @@
+# 数据源声明：新华财经 MCP
+id: xinhua-finance
+name: "新华财经 MCP 服务"
+trust: L2
+priority: 35
+status: "公开资料显示 2026 年已开放面向 AI 客户端的金融信息服务"
+note: "国家级金融信息平台，政策法规、公告与资讯类字段的补充来源"
+
+auth:
+  recommended: "按厂商文档在宿主客户端完成授权"
+  token_location: "宿主客户端保管，本仓库不存放"
+
+capability_hints:
+  - policy_feed
+  - news_announcements
+  - announcement_feed
+  - macro_data
+  - market_quotes
+
+coverage:
+  - policy_text
+  - fund_announcements
+  - macro_rates
+  - macro_fx
+  - index_quotes
+  - corporate_actions
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见厂商官方接入文档，本文件不内置端点"
+limits: "服务范围与授权条件以厂商官方文档为准；媒体转述内容标 second_hand"
+facts_source: "2026 年公开资料整理（中国金融信息网等），非实时核验"
+disclaimer: "接入方式与服务清单以新华财经官方文档为准；本仓库不内置端点或凭据"

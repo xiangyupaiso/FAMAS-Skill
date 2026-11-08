@@ -1,0 +1,32 @@
+id: judgment/institutional_evidence
+version: "2.0.0"
+name: "机构观点与关键假设表核对"
+category: judgment
+intent: ["研报怎么说", "关键假设", "机构观点", "假设表回溯", "卖方观点核对", "假设变了吗"]
+inputs:
+  fund_code: {type: string, required: true}
+  question: {type: string, required: true, desc: "要核对的具体判断"}
+  as_of: {type: string, required: false}
+defaults:
+  read_without_storing: true
+  require_opinion_ref: true
+  check_assumption_versions: true
+  forbid_conclusion_import: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: periodic_report_reader
+    with: {report_type: "annual"}
+  - use: performance_metrics
+  - use: macro_context
+    with: {as_of: "$inputs.as_of"}
+  - use: devils_advocate
+    with: {upstream_blocks: "$steps"}
+  - use: synthesis
+    with: {lens: "fof", question: "$inputs.question", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "v2.0 L3：研报 / 财报 / 关键假设表是**运行时经授权检索的证据**，不是长期知识，更不是权重"
+  - "读而不存：不打包全文、不落库、不再分发；引用必须带机构名 + 发布时间 + opinion_ref"
+  - "关键假设表按历史版本回溯，核对'假设是否变了'；卖方观点只作证据，绝不直接当 FAMAS 结论"
+  - "多源观点冲突时列分歧，不静默采信一家"

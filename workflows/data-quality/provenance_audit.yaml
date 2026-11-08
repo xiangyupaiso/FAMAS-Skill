@@ -1,0 +1,27 @@
+id: data-quality/provenance_audit
+version: "2.0.0"
+name: "结论溯源审计"
+category: data-quality
+intent: ["这个数字哪来的", "报告溯源", "出处审计", "可信吗", "数据可靠吗"]
+inputs:
+  report_ref: {type: string, required: true, desc: "待审计报告的引用或文本"}
+defaults:
+  check_provenance_completeness: true
+  check_as_of_freshness: true
+  check_estimated_label: true
+  check_second_hand_label: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.report_ref.fund_code"}
+  - use: performance_metrics
+    with: {lookback: "$inputs.report_ref.window"}
+  - use: relative_compare
+    with: {fund_codes: "$inputs.report_ref.fund_codes", dimensions: "auto"}
+  - use: synthesis
+    with: {lens: "risk", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "逐项核对报告中每个关键数字是否有 source + as_of + confidence，缺项列为审计发现"
+  - "核对 estimated / second_hand 标记是否与实际一致；检查数据是否被表述为'当前'而实为历史"
+  - "输出'可追溯 / 存疑 / 无法核实'三类清单，不改写原报告结论，不替用户下判断"
+  - "与 policies/compliance.md 的 C6/C7 检查清单互为校验"

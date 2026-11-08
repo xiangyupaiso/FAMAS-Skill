@@ -1,0 +1,27 @@
+id: lifecycle/periodic_review
+version: "2.0.0"
+name: "持仓定期复查"
+category: lifecycle
+intent: ["定期复查", "季度体检", "订阅复查", "每月看一次", "和上次比"]
+inputs:
+  holdings: {type: list, required: true}
+  interval: {type: string, required: false, default: "quarterly"}
+  baseline_report_ref: {type: string, required: false, desc: "上次报告引用，用于对比变化"}
+defaults:
+  compare_to_baseline: true
+  emit_delta_only: false
+scheduler:
+  note: "由宿主调度器按 interval 触发；Core 不常驻"
+steps:
+  - include:
+      workflow: core/c_portfolio
+      with: {holdings: "$inputs.holdings", lens: "retail"}
+  - use: relative_compare
+    with: {fund_codes: "$inputs.holdings.codes", dimensions: "auto"}
+  - use: synthesis
+    with: {lens: "retail", baseline_report_ref: "$inputs.baseline_report_ref", upstream_blocks: "$steps"}
+render: portfolio_diagnosis
+notes:
+  - "把 core/c_portfolio 变成订阅式，是留存场景的核心；include 复用而非复制"
+  - "有 baseline_report_ref 时输出'较上次变化'，无则输出本期全量"
+  - "v2.0 决策日志接入后，本工作流自动回看上期判断对错（decision_log_ref）"

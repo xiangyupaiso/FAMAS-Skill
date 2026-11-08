@@ -1,0 +1,31 @@
+# 数据源声明：申万宏源研究 MCP（机构客户）
+id: swhy-research
+name: "申万宏源研究 MCP"
+trust: L2
+priority: 25
+status: "公开资料显示 2026 年已开放研究类 MCP 工具集，面向机构客户"
+note: "含关键假设表等可回溯数据，是 v2.0 机构语料输入的重要来源；研报观点只作证据，不作结论"
+
+auth:
+  recommended: "机构账号授权，按厂商文档在宿主客户端配置"
+  token_location: "宿主客户端保管，本仓库不存放"
+
+capability_hints:
+  - research_data
+  - assumption_tables
+  - macro_data
+  - policy_interpretation
+  - industry_research
+
+coverage:
+  - research_reports
+  - assumption_tables
+  - policy_text
+  - macro_rates
+  - style_index
+
+tool_names: "runtime-discovered via tools/list"
+endpoint: "见厂商官方接入文档，本文件不内置端点"
+limits: "仅机构客户；研报有版权与授权边界，运行时读取、读而不存、不打包再分发"
+facts_source: "2026 年公开资料整理（财经媒体与行业报道），非实时核验"
+disclaimer: "接入资格、工具清单与授权范围以申万宏源官方文档为准；引用须标机构名 + 发布时间 + opinion_ref"

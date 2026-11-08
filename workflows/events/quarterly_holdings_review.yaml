@@ -1,0 +1,32 @@
+id: events/quarterly_holdings_review
+version: "2.0.0"
+name: "季报 / 年报持仓变动解读"
+category: events
+intent: ["季报解读", "年报解读", "重仓变化", "经理说了什么做了什么", "持仓变动"]
+inputs:
+  fund_code: {type: string, required: true}
+  report_period: {type: string, required: true, desc: "YYYYQn"}
+  compare_periods: {type: integer, required: false, default: 2}
+defaults:
+  align_report_period: true
+  cross_period_overlap_forbidden: true
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - use: periodic_report_reader
+    with: {fund_code: "$inputs.fund_code", report_type: "quarterly", report_period: "$inputs.report_period", compare_periods: "$inputs.compare_periods"}
+  - use: performance_metrics
+    with: {lookback: "$inputs.report_period"}
+  - use: relative_compare
+    with: {fund_codes: "[$inputs.fund_code]", dimensions: ["holdings", "turnover", "style"]}
+  - use: people
+  - use: devils_advocate
+    with: {upstream_blocks: "$steps"}
+  - use: synthesis
+    with: {lens: "fund_manager", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "v2.0 升级：原工作流只读持仓数据，现在先由 periodic_report_reader 读报告全文再对照"
+  - "重点核对'季报里管理人表述'与'实际持仓动作'是否一致，只报差异不评价诚信"
+  - "持仓为季末快照；跨报告期比较须同期，禁止混用不同报告期做重合度"
+  - "lens=fund_manager 时聚焦能力圈、风格漂移与容量，而非零售适配度"

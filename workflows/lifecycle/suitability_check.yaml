@@ -1,0 +1,27 @@
+id: lifecycle/suitability_check
+version: "2.0.0"
+name: "买入前适配性检查"
+category: lifecycle
+intent: ["我适合买吗", "定投适配", "风险测评", "能不能配", "适不适合我"]
+inputs:
+  fund_code: {type: string, required: true}
+  investor_profile: {type: object, required: true, desc: "风险等级、投资期限、资金属性（一次性/定投）、可承受回撤"}
+  lens: {type: string, required: false, default: "advisor"}
+defaults:
+  risk_scale: "R1-R5"
+  horizon_unit: "year"
+steps:
+  - use: fund_profile
+    with: {fund_code: "$inputs.fund_code"}
+  - parallel:
+      - performance_metrics
+      - cost_model
+  - use: macro_context
+    with: {as_of: "$runtime.as_of"}
+  - use: synthesis
+    with: {lens: "$inputs.lens", investor_profile: "$inputs.investor_profile", upstream_blocks: "$steps"}
+render: decision_memo
+notes:
+  - "v1 未覆盖。先问全 investor_profile 再执行，一次问完，不逐轮追问"
+  - "输出的是适配度与风险等级，不是'能不能买'的判断，天然贴合合规闸 C1/C3"
+  - "lens=advisor 时会额外输出禁止表述清单，便于渠道侧使用"

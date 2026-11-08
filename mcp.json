@@ -1,0 +1,48 @@
+{
+  "_comment": "FAMAS v2.0 MCP 配置结构模板。所有 <...> 与 ${...} 均为占位符，真实值只放在本地未跟踪文件或环境变量中，禁止提交密钥。接入步骤见 SETUP.md。",
+  "_version": "2.0.0",
+  "_do_not_commit_real_credentials": true,
+  "mcpServers": {
+    "ifind": {
+      "_type": "remote-http-oauth",
+      "url": "https://<IFIND_MCP_ENDPOINT>/mcp",
+      "oauth": {
+        "enabled": true,
+        "flow": "authorization-code-with-PKCE",
+        "discovery": "rfc8414 or oidc-discovery",
+        "scopes": "<按厂商文档填写，遵循最小权限原则>"
+      }
+    },
+    "wind-aifin": {
+      "_type": "remote-http",
+      "url": "https://<WIND_AIFIN_MCP_ENDPOINT>/mcp",
+      "headers": {
+        "Authorization": "Bearer ${FAMAS_WIND_TOKEN}"
+      }
+    },
+    "tushare": {
+      "_type": "stdio",
+      "command": "<按 Tushare 官方 MCP 文档填写>",
+      "args": ["<按官方文档填写>"],
+      "env": {
+        "TUSHARE_TOKEN": "${FAMAS_TUSHARE_TOKEN}"
+      }
+    },
+    "akshare": {
+      "_type": "stdio-local",
+      "command": "<本地 AKShare MCP 封装的启动命令>",
+      "args": [],
+      "env": {},
+      "_note": "开源封装，可信度 L3，仅作补充；无 SLA、无数据再分发授权"
+    }
+  },
+  "_optional_providers": [
+    "eastmoney-miaoxiang",
+    "tdx",
+    "juyuan",
+    "shzq-jihui",
+    "swhy-research",
+    "xinhua-finance"
+  ],
+  "_optional_providers_note": "按需在 data/providers/ 下查看对应配置说明后加入；未配置的数据源会被 Core 自动跳过。"
+}

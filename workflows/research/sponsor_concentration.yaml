@@ -1,0 +1,27 @@
+id: research/sponsor_concentration
+version: "2.0.0"
+name: "管理人维度集中度与清盘线扫描"
+category: research
+intent: ["同一家基金公司", "管理人集中度", "迷你基金", "清盘风险扫描"]
+inputs:
+  holdings: {type: list, required: false}
+  sponsor: {type: string, required: false, desc: "按指定基金公司扫描全产品线"}
+defaults:
+  liquidation_line_yi: 2
+  capacity_threshold_yi: 100
+  group_by: "sponsor"
+steps:
+  - use: universe_scan
+    with: {preference: "$inputs.sponsor", scope: "all"}
+  - conditional:
+      when: "$inputs.holdings != null"
+      use: portfolio_view
+  - use: cost_model
+    with: {horizon: 3}
+  - use: synthesis
+    with: {lens: "risk", upstream_blocks: "$steps"}
+render: screening_report
+notes:
+  - "v1 未覆盖的组合外风险：同一管理人产品占比、共用研究资源、迷你基金批量清盘线"
+  - "规模阈值只作提示，不预测清盘发生；禁止把阈值提示写成风险事件"
+  - "holdings 为空时按 sponsor 扫描全产品线，输出规模分布与阈值命中清单"
